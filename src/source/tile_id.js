@@ -1,12 +1,16 @@
 // @flow
 
 import {getTileBBox} from '@mapbox/whoots-js';
+
+import * as tileUtils4490  from '@jingsam/whoots-js';
+
 import EXTENT from '../data/extent';
 import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../geo/mercator_coordinate';
 
 import assert from 'assert';
 import {register} from '../util/web_worker_transfer';
+import { getProjection } from '../util/getProjection';
 
 export class CanonicalTileID {
     z: number;
@@ -30,16 +34,17 @@ export class CanonicalTileID {
 
     // given a list of urls, choose a url template and return a tile URL
     url(urls: Array<string>, scheme: ?string) {
-        const bbox = getTileBBox(this.x, this.y, this.z);
+        const projection = getProjection();
+        const bbox = projection === 3857 ? getTileBBox(this.x, this.y, this.z) : tileUtils4490.getTileBBox(this.x, this.y, this.z);
         const quadkey = getQuadkey(this.z, this.x, this.y);
-
+        const tmsy = projection === 3857 ? (Math.pow(2, this.z) - this.y - 1):(Math.pow(2, this.z - 1) - 1 - this.y);
         return urls[(this.x + this.y) % urls.length]
             .replace('{prefix}', (this.x % 16).toString(16) + (this.y % 16).toString(16))
             .replace('{z}', String(this.z))
             .replace('{x}', String(this.x))
-            .replace('{y}', String(scheme === 'tms' ? (Math.pow(2, this.z) - this.y - 1) : this.y))
+            .replace('{y}', String(scheme === 'tms' ? tmsy : this.y))
             .replace('{quadkey}', quadkey)
-            .replace('{bbox-epsg-3857}', bbox);
+            .replace(projection === 3857 ? '{bbox-epsg-3857}' : '{bbox-epsg-4490}', bbox);
     }
 
     getTilePoint(coord: MercatorCoordinate) {

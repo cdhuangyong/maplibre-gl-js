@@ -3,6 +3,7 @@
 import {getArrayBuffer} from '../util/ajax';
 
 import vt from '@mapbox/vector-tile';
+import vt4490 from '@jingsam/vector-tile';
 import Protobuf from 'pbf';
 import WorkerTile from './worker_tile';
 import {extend} from '../util/util';
@@ -18,6 +19,7 @@ import type {
 import type Actor from '../util/actor';
 import type StyleLayerIndex from '../style/style_layer_index';
 import type {Callback} from '../types/callback';
+import { getProjection } from '../util/getProjection';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTile;
@@ -46,8 +48,10 @@ function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCa
         if (err) {
             callback(err);
         } else if (data) {
+            let projection = getProjection();
+            let _vt = projection === 3857 ? vt : vt4490;
             callback(null, {
-                vectorTile: new vt.VectorTile(new Protobuf(data)),
+                vectorTile: new _vt.VectorTile(new Protobuf(data)),
                 rawData: data,
                 cacheControl,
                 expires

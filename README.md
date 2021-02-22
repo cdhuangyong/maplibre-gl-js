@@ -1,8 +1,23 @@
+<!--
+ * @Author: yongju
+ * @Date: 2021-02-22 15:27:32
+ * @LastEditors: yongju
+ * @LastEditTime: 2021-02-22 17:07:49
+ * @Description: 
+-->
 # MapLibre GL
 
 **MapLibre GL** is a community led fork derived from [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) prior to their switch to a non-OSS license.
 
 [<img width="200" alt="MapLibre" src="https://user-images.githubusercontent.com/223277/101580282-7534f700-397e-11eb-8b58-687f52e2a8cf.png">](http://maplibre.org)
+
+### 该库做的一些调整改变
+#### 合并cgcs2000/mapbox-gl-js到maplibre-gl-js 支持3857、4490两种坐标系切换
+```
+  maplibre.projection = 3857;
+  或者
+  maplibre.projection = 4490;
+```
 
 ### Migrating from mapbox-gl
 

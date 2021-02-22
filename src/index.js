@@ -99,6 +99,18 @@ const exported = {
     },
 
     /**
+     * 坐标系设置
+     * projection 4490 | 3857
+     */
+    get projection(): ?string {
+        return config.PROJECTION;
+    },
+
+    set projection(projection: string) {
+        config.PROJECTION = projection;
+    },
+
+    /**
      * Gets and sets the map's default API URL for requesting tiles, styles, sprites, and glyphs
      *
      * @var {string} baseApiUrl
@@ -170,7 +182,9 @@ const exported = {
         clearTileCache(callback);
     },
 
-    workerUrl: ''
+    workerUrl: function(){
+        return ''
+    }
 };
 
 //This gets automatically stripped out in production builds.

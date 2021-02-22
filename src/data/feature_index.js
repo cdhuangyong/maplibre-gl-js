@@ -9,6 +9,7 @@ import featureFilter from '../style-spec/feature_filter';
 import Grid from 'grid-index';
 import DictionaryCoder from '../util/dictionary_coder';
 import vt from '@mapbox/vector-tile';
+import vt4490 from '@jingsam/vector-tile';
 import Protobuf from 'pbf';
 import GeoJSONFeature from '../util/vectortile_to_geojson';
 import {arraysIntersect, mapObject, extend} from '../util/util';
@@ -25,6 +26,7 @@ import type Transform from '../geo/transform';
 import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types';
 
 import {FeatureIndexArray} from './array_types';
+import { getProjection } from '../util/getProjection';
 
 type QueryParameters = {
     scale: number,
@@ -97,7 +99,13 @@ class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayer} {
         if (!this.vtLayers) {
-            this.vtLayers = new vt.VectorTile(new Protobuf(this.rawTileData)).layers;
+            let projection = getProjection();
+            if(projection === 3857){
+                this.vtLayers = new vt.VectorTile(new Protobuf(this.rawTileData)).layers;
+            }else{
+                this.vtLayers = new vt4490.VectorTile(new Protobuf(this.rawTileData)).layers;
+            }
+            
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : ['_geojsonTileLayer']);
         }
         return this.vtLayers;

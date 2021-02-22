@@ -13,6 +13,7 @@ import EdgeInsets from './edge_insets';
 
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
+import { getProjection } from '../util/getProjection';
 
 /**
  * A single transform, generally used for a single tile to be
@@ -58,7 +59,15 @@ class Transform {
 
     constructor(minZoom: ?number, maxZoom: ?number, minPitch: ?number, maxPitch: ?number, renderWorldCopies: boolean | void) {
         this.tileSize = 512; // constant
-        this.maxValidLatitude = 85.051129; // constant
+
+        let projection = getProjection();
+
+        if(projection === 3857){
+            this.maxValidLatitude = 85.051129; // constant
+        }else{
+            this.maxValidLatitude = 90; // constant
+        }
+        
 
         this._renderWorldCopies = renderWorldCopies === undefined ? true : renderWorldCopies;
         this._minZoom = minZoom || 0;
@@ -331,7 +340,7 @@ class Transform {
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
         const numTiles = Math.pow(2, z);
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix, this.worldSize, z);
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix_limit, this.worldSize, z);
 
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
@@ -730,6 +739,8 @@ class Transform {
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([], this.projMatrix);
 
+        this._calcTileCulledMatrix(fovAboveCenter,nearZ,offset,x,y);
+
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
         // coordinates. Additionally, we adjust by half a pixel in either direction in case that viewport dimension
@@ -765,6 +776,26 @@ class Transform {
 
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
+    }
+
+    _calcTileCulledMatrix(fovAboveCenter,nearZ,offset,x,y){
+        var _pitch$1 = Math.min( 70 / 180 * Math.PI ,this._pitch);
+        var groundAngle = Math.PI / 2 + _pitch$1;
+        var topHalfSurfaceDistance = Math.sin(fovAboveCenter) * this.cameraToCenterDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
+        var furthestDistance = Math.cos(Math.PI / 2 - _pitch$1) * topHalfSurfaceDistance + this.cameraToCenterDistance;
+        var farZ = furthestDistance * 1.01;
+        var m = new Float64Array(16);
+        mat4.perspective(m, this._fov, this.width / this.height, 0.01, farZ);
+        m[8] = -offset.x * 2 / this.width;
+        m[9] = offset.y * 2 / this.height;
+        mat4.scale(m, m, [1, -1, 1]);
+        mat4.translate(m, m, [0, 0, -this.cameraToCenterDistance]);
+        mat4.rotateX(m, m, this._pitch);
+        mat4.rotateZ(m, m, this.angle);
+        mat4.translate(m, m, [-x, -y, 0]);
+        //this.mercatorMatrix = performance.scale([], m, [this.worldSize, this.worldSize, this.worldSize]);
+        mat4.scale(m, m, [1, 1, mercatorZfromAltitude(1, this.center.lat) * this.worldSize, 1]);
+        this.invProjMatrix_limit = mat4.invert([], m);
     }
 
     maxPitchScaleFactor() {

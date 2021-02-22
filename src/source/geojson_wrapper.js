@@ -1,10 +1,20 @@
+/*
+ * @Author: yongju
+ * @Date: 2021-02-22 15:27:32
+ * @LastEditors: yongju
+ * @LastEditTime: 2021-02-22 19:17:14
+ * @Description: 
+ */
 // @flow
 
 import Point from '@mapbox/point-geometry';
 
 import mvt from '@mapbox/vector-tile';
+import mvt4490 from '@jingsam/vector-tile';
 const toGeoJSON = mvt.VectorTileFeature.prototype.toGeoJSON;
+const toGeoJSON4490 = mvt4490.VectorTileFeature.prototype.toGeoJSON;
 import EXTENT from '../data/extent';
+import { getProjection } from '../util/getProjection';
 
 // The feature type used by geojson-vt and supercluster. Should be extracted to
 // global type and used in module definitions for those two modules.
@@ -67,7 +77,12 @@ class FeatureWrapper implements VectorTileFeature {
     }
 
     toGeoJSON(x: number, y: number, z: number) {
-        return toGeoJSON.call(this, x, y, z);
+        let projection = getProjection();
+        if(projection === 3857){
+            return toGeoJSON.call(this, x, y, z);
+        }else{
+            return toGeoJSON4490.call(this, x, y, z);
+        }
     }
 }
 

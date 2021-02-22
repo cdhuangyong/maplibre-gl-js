@@ -8,6 +8,7 @@ import GeoJSONWrapper from './geojson_wrapper';
 import vtpbf from 'vt-pbf';
 import Supercluster from 'supercluster';
 import geojsonvt from 'geojson-vt';
+import geojsonvt4490 from '@jingsam/geojson-vt';
 import assert from 'assert';
 import VectorTileWorkerSource from './vector_tile_worker_source';
 import {createExpression} from '../style-spec/expression';
@@ -24,6 +25,7 @@ import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
 import type {GeoJSONFeature} from '@mapbox/geojson-types';
+import { getProjection } from '../util/getProjection';
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters,
@@ -184,9 +186,21 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
                         data = {type: 'FeatureCollection', features};
                     }
 
-                    this._geoJSONIndex = params.cluster ?
+                    let projection = getProjection();
+
+                    if(projection === 3857){
+                        this._geoJSONIndex = params.cluster ?
                         new Supercluster(getSuperclusterOptions(params)).load(data.features) :
                         geojsonvt(data, params.geojsonVtOptions);
+                    }else{
+                        this._geoJSONIndex = params.cluster ?
+                        new Supercluster(getSuperclusterOptions(params)).load(data.features) :
+                        geojsonvt4490(data, params.geojsonVtOptions);
+                    }
+
+                    // this._geoJSONIndex = params.cluster ?
+                    //     new Supercluster(getSuperclusterOptions(params)).load(data.features) :
+                    //     geojsonvt(data, params.geojsonVtOptions);
                 } catch (err) {
                     return callback(err);
                 }

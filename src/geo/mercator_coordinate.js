@@ -2,6 +2,8 @@
 
 import LngLat, {earthRadius} from '../geo/lng_lat';
 import type {LngLatLike} from '../geo/lng_lat';
+import { getProjection } from '../util/getProjection';
+import { clamp } from '../util/util';
 
 /*
  * The average circumference of the world in meters.
@@ -20,7 +22,13 @@ export function mercatorXfromLng(lng: number) {
 }
 
 export function mercatorYfromLat(lat: number) {
-    return (180 - (180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)))) / 360;
+    let projection = getProjection();
+    if(projection === 3857){
+        return (180 - (180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)))) / 360;
+    }else{
+        return (90 - lat) / 360;
+        //return clamp((90 - lat) / 360, -90, 90);
+    }
 }
 
 export function mercatorZfromAltitude(altitude: number, lat: number) {
@@ -32,8 +40,13 @@ export function lngFromMercatorX(x: number) {
 }
 
 export function latFromMercatorY(y: number) {
-    const y2 = 180 - y * 360;
-    return 360 / Math.PI * Math.atan(Math.exp(y2 * Math.PI / 180)) - 90;
+    let projection = getProjection();
+    if(projection === 3857){
+        const y2 = 180 - y * 360;
+        return 360 / Math.PI * Math.atan(Math.exp(y2 * Math.PI / 180)) - 90;
+    }else{
+        return clamp(90 - y * 360, -90, 90);
+    }
 }
 
 export function altitudeFromMercatorZ(z: number, y: number) {

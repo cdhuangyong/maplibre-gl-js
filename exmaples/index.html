@@ -1,0 +1,126 @@
+<!--
+ * @Author: yongju
+ * @Date: 2021-02-22 17:41:18
+ * @LastEditors: yongju
+ * @LastEditTime: 2021-02-22 17:44:53
+ * @Description: 
+-->
+<html>
+    <head>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                list-style: none;
+            }
+            html,body,#container{
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <link rel="stylesheet" href="../dist/maplibre-gl.css">
+        <script src="../dist/maplibre-gl-dev.js"></script>
+    </head>
+    <body>
+        <div id='container'></div>
+    </body>
+    <script>
+        (function(){
+
+            var defaultStye = {
+                version: 8,
+                layers: [],
+                sources: {},
+                "glyphs": "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf"
+            };
+            
+            var map = new maplibregl.Map({
+                container: document.getElementById("container"),
+                antialias:true,
+                //style:'mapbox://styles/mapbox/streets-v9',
+                style: defaultStye,
+                center: [116,32],
+                zoom: 10,
+                pitch: 0
+            });
+            
+            map.on("load",()=>{
+
+                var lineString = [
+                    [115.79194641113122, 32.041916618303276],
+                    [116.00137329101369, 32.06577723196547],
+                    [116.13664245605355, 32.01397433685359],
+                    [116.00686645507614, 31.938837237943133],
+                    [115.85717773437278, 31.98602353307183],
+                    [115.7857666015613, 31.946411980379978]
+                ];
+                
+                map.on("click",function(evt){
+                    console.log(evt.lngLat.toArray());
+                });
+
+                map.addSource("point",{
+                    type:"geojson",
+                    data:{
+                        type:"FeatureCollection",
+                        features:[
+                            {
+                                type:"Feature",
+                                properties:{
+                                    "name":"mmmmmmm"
+                                },
+                                geometry:{
+                                    type:"Point",
+                                    coordinates:[115.79194641113122, 32.041916618303276]
+                                }
+                            }
+                        ]
+                    }
+                });
+
+                map.addLayer({
+                    id:"test",
+                    type:"symbol",
+                    source:"point",
+                    'layout': {
+                        'text-field': ["get","name"],
+                        'text-font': ['Open Sans Bold'],
+                        'text-size':20
+                    },
+                    'paint':{
+                        "text-color": "red",
+                    }
+                });
+
+                // map.addSource("line",{
+                //     type:"geojson",
+                //     data:{
+                //         type:"FeatureCollection",
+                //         features:[
+                //             {
+                //                 type:"Feature",
+                //                 properties:{},
+                //                 geometry:{
+                //                     type:"LineString",
+                //                     coordinates:lineString
+                //                 }
+                //             }
+                //         ]
+                //     }
+                // });
+
+                // map.addLayer({
+                //     id:"test",
+                //     type:"line",
+                //     source:"line",
+                //     'paint': {
+                //         'line-width': 100,
+                //         'line-color': "red"
+                //     }
+                // })
+
+            })
+
+        })();
+    </script>
+</html>
